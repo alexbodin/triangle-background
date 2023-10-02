@@ -70,7 +70,7 @@ var TriangleBG = function(opts) {
       cellHeight: 100
    };
 
-   this.vert = new Array();
+   this.vert = [];
    this.mouse = {x:null,y:null}
 
    //set baseCell width and height from options:
@@ -360,13 +360,13 @@ TriangleBG.prototype.renderLoop = function() {
       }
    }
    this.ctx.translate(-this.render.offset.x, -this.render.offset.y);
-   this.ctx.fillStyle = this.render.color1.lightness > 50 ? "black" : "white";
-   //this.ctx.font = "bold 70px Arial";
-   //this.ctx.fillText("essiq", (canvas.width / 2) - 85, (canvas.height / 2) + 8);
+   //this.ctx.fillStyle = this.render.color1.lightness > 50 ? "black" : "white";
+   //this.ctx.font = "bold 170px Arial";
+   //this.ctx.fillText("essiq", (canvas.width / 2) - 255, (canvas.height / 2) + 8);
 
    this.render.i += 1;
    if (this.render.mouseLight) {
-      window.setTimeout(this.renderLoop.bind(this), 1000/30);
+      window.setTimeout(this.renderLoop.bind(this), 1000/15);
    }
 };
 TriangleBG.prototype.delete = function() {
