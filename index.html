@@ -32,17 +32,17 @@
       <script>
       // Adapt color theme for light or dark mode
       var color = { // dark
-            mouseLightRadius: 500,
             mouseLightIncrement: 40,
-            baseLightness1: 14.5,
-            baseLightness2: 14,
+            baseLightness1: 14,
+            baseLightness2: 15,
+            baseLightness3: 15.5,
       }
-      if (true /* light mode */) {
+      if (false /* light mode */) {
          color = {
-         mouseLightRadius: 600,
          mouseLightIncrement: -50,
-         baseLightness1: 100,
-         baseLightness2: 99,
+         baseLightness1: 99,
+         baseLightness2: 98,
+         baseLightness3: 96,
          }
       }
 
@@ -51,17 +51,17 @@
       var triangle = new TriangleBG({
          canvas: canvas,
          alternateElem: altBG,
+         pattern: "y",
          cellHeight: 100,
          cellWidth: 100,
          mouseLight: true,
-         mouseLightRadius: color.mouseLightRadius,
-         mouseSaturationIncrement: 90,
+         mouseLightRadius: 550,
          mouseLightIncrement: color.mouseLightIncrement,
          resizeAdjustment: true,
          variance: 1.5, // How uniform should the triangles be (higher = more square)
          variance_animation: 10,
          speed: 0.0005,
-         pattern: "y",
+         mouseSaturationIncrement: 88,
          baseColor1: {
             baseHue: 17,
             baseSaturation: 0,
@@ -72,10 +72,15 @@
             baseSaturation: 0,
             baseLightness: color.baseLightness2,
          },
+         baseColor3: {
+            baseHue: 17,
+            baseSaturation: 0,
+            baseLightness: color.baseLightness3,
+         },
          colorDelta: {
-            hue: 0.9,
-            saturation: 0.1,
-            lightness: 0.1,
+            hue: 0.5,
+            saturation: 0,
+            lightness: 0,
          }
        });
       </script>

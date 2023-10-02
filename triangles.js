@@ -45,6 +45,11 @@ var TriangleBG = function(opts) {
          saturation: 0,
          lightness: 0
       },
+      color3: {
+         hue: 0,
+         saturation: 0,
+         lightness: 0
+      },
       colorDelta: {
          hue: 0.5,
          saturation: 0,
@@ -54,7 +59,10 @@ var TriangleBG = function(opts) {
    //default colors
    this.render.color2.hue = this.render.color1.hue;
    this.render.color2.saturation = this.render.color1.saturation;
-   this.render.color2.lightness = this.render.color1.lightness + 2;
+   this.render.color2.lightness = this.render.color1.lightness+ 2;
+   this.render.color3.hue = this.render.color1.hue;
+   this.render.color3.saturation = this.render.color1.saturation;
+   this.render.color3.lightness = this.render.color1.lightness+ 2;
 
    this.net = {
       w:0, h:0,
@@ -128,6 +136,17 @@ var TriangleBG = function(opts) {
          this.render.color2.lightness = opts.baseColor2.baseLightness;
       }
    }
+   if (opts.baseColor3) {
+      if (opts.baseColor3.baseHue) {
+         this.render.color3.hue = opts.baseColor3.baseHue;
+      }
+      if (opts.baseColor3.baseSaturation) {
+         this.render.color3.saturation = opts.baseColor3.baseSaturation;
+      }
+      if (opts.baseColor3.baseLightness) {
+         this.render.color3.lightness = opts.baseColor3.baseLightness;
+      }
+   }
    if (opts.colorDelta) {
       if (opts.colorDelta.hue) {
          this.render.colorDelta.hue = opts.colorDelta.hue;
@@ -140,7 +159,7 @@ var TriangleBG = function(opts) {
       }
    }
    //vertices
-   this.generateNet();
+   this.generateNet(false);
 
    //window size change, so canvas doesn't deform
    window.addEventListener("resize", this, false);
@@ -155,7 +174,7 @@ var TriangleBG = function(opts) {
             if (this.render.resizeAdjustment) {
                this.ctx.canvas.height = this.canvas.clientHeight;
                this.ctx.canvas.width = this.canvas.clientWidth;
-               this.generateNet();
+               this.generateNet(true);
             }
          break;
          case "mousemove":
@@ -198,13 +217,12 @@ TriangleBG.prototype.generateNet = function(regenerate) {
                k_y: Math.random()*this.render.variance_animation,
             }
          });
-         if (x === 0 && y === 0) {
-            console.log(this.vert[x][y].trig)
-         }
       }
    }
 
-   this.renderLoop();
+   if (!regenerate) {
+      this.renderLoop();
+   }
    if (this.alternateElem) {
       var dataURL = this.canvas.toDataURL("image/png");
    }
@@ -220,8 +238,6 @@ TriangleBG.prototype.renderLoop = function() {
    for (x = 0; x < this.net.w-1; x++) {
       var y;
       for (y = 0; y < this.net.h-1; y++) {
-         var drawX, drawY;
-         var centerX1=0, centerY1=0, centerX2=0, centerY2=0;
          var hueDelta = 0;
          var pattern;
          var saturationDelta = 0;
@@ -239,87 +255,108 @@ TriangleBG.prototype.renderLoop = function() {
          else if (this.render.pattern === "y"){
             pattern = Math.abs(y);
          }
-         hueDelta =  pattern * this.render.colorDelta.hue;
-         saturationDelta = 0;
-         lightnessDelta = 0;
+         hueDelta =  pattern * this.render.colorDelta.hue
+         saturationDelta = this.render.colorDelta.saturation
+         lightnessDelta = this.render.colorDelta.lightness
 
-         //1st triangle
-         this.ctx.beginPath();
-
-         drawX = x * this.net.cellWidth + this.vert[x][y].offset.x + Math.sin(this.vert[x][y].trig.theta_x * this.render.speed * this.render.i) * this.vert[x][y].trig.k_x;
-         drawY = y * this.net.cellHeight + this.vert[x][y].offset.y + Math.sin(this.vert[x][y].trig.theta_y * this.render.speed * this.render.i) * this.vert[x][y].trig.k_y;
-         centerX1+=drawX;
-         centerY1+=drawY;
-         this.ctx.lineTo(drawX, drawY);
-
-         drawX = x * this.net.cellWidth + this.vert[x][y+1].offset.x + Math.sin(this.vert[x][y+1].trig.theta_x * this.render.speed * this.render.i) * this.vert[x][y+1].trig.k_x;
-         drawY = (y+1) * this.net.cellHeight + this.vert[x][y+1].offset.y + Math.sin(this.vert[x][y+1].trig.theta_y * this.render.speed * this.render.i) * this.vert[x][y+1].trig.k_y;
-         centerX1+=drawX;
-         centerY1+=drawY;
-         this.ctx.lineTo(drawX, drawY);
-
-         drawX = (x+1) * this.net.cellWidth + this.vert[x+1][y+1].offset.x + Math.sin(this.vert[x+1][y+1].trig.theta_x * this.render.speed * this.render.i) * this.vert[x+1][y+1].trig.k_x;
-         drawY = (y+1) * this.net.cellHeight + this.vert[x+1][y+1].offset.y + Math.sin(this.vert[x+1][y+1].trig.theta_y * this.render.speed * this.render.i) * this.vert[x+1][y+1].trig.k_y;
-         centerX1+=drawX;
-         centerY1+=drawY;
-         this.ctx.lineTo(drawX, drawY);
-
-         this.ctx.closePath();
-
-         centerX1 = centerX1/3;
-         centerY1 = centerY1/3;
-         if (this.render.mouseLight && Math.pow(Math.abs(this.mouse.x - centerX1),2) + Math.pow(Math.abs(this.mouse.y-centerY1),2) < Math.pow(mouseLightRadius,2)) {
-            var radius = Math.sqrt( Math.pow(Math.abs(this.mouse.x-centerX1),2) + Math.pow(Math.abs(this.mouse.y - centerY1),2) );
-            lightnessIncrement = (mouseLightRadius-radius)/(mouseLightRadius)*this.render.mouseLightIncrement;
-            saturationIncrement = (mouseLightRadius-radius)/(mouseLightRadius)*this.render.mouseSaturationIncrement;
-         }
-         var col1 = 'hsl(' + Math.floor(this.render.color1.hue + hueDelta) + ', ' +
-                             Math.floor(this.render.color1.saturation + saturationDelta + saturationIncrement) +  '% ,' +
-                             (this.render.color1.lightness + lightnessDelta + lightnessIncrement) +'%)';
-
-         this.ctx.fillStyle = col1;
-         this.ctx.strokeStyle = col1;
-         this.ctx.fill();
-         this.ctx.stroke();
-
-         //2nd triangle
-         this.ctx.beginPath();
-
-         drawX = x * this.net.cellWidth + this.vert[x][y].offset.x + Math.sin(this.vert[x][y].trig.theta_x * this.render.speed * this.render.i) * this.vert[x][y].trig.k_x;
-         drawY = y * this.net.cellHeight + this.vert[x][y].offset.y + Math.sin(this.vert[x][y].trig.theta_y * this.render.speed * this.render.i) * this.vert[x][y].trig.k_y;
+         // Calculate all points in the square (will make 6 triangles)
+         let [x1, y1] = this.calculatePoint(this.net, this.vert, this.render, x, y)
+         let [x2, y2] = this.calculatePoint(this.net, this.vert, this.render, x, y+1)
+         let [x3, y3] = this.calculatePoint(this.net, this.vert, this.render, x+1, y)
+         let [x4, y4] = this.calculatePoint(this.net, this.vert, this.render, x+1, y+1)
          
-         centerX2+=drawX;
-         centerY2+=drawY;
-         this.ctx.lineTo(drawX, drawY);
-
-         drawX = (x+1) * this.net.cellWidth + this.vert[x+1][y].offset.x + Math.sin(this.vert[x+1][y].trig.theta_x * this.render.speed * this.render.i) * this.vert[x+1][y].trig.k_x;
-         drawY = y * this.net.cellHeight + this.vert[x+1][y].offset.y + Math.sin(this.vert[x+1][y].trig.theta_y * this.render.speed * this.render.i) * this.vert[x+1][y].trig.k_y;
-         centerX2+=drawX;
-         centerY2+=drawY;
-         this.ctx.lineTo(drawX, drawY);
-
-         drawX = (x+1) * this.net.cellWidth + this.vert[x+1][y+1].offset.x + Math.sin(this.vert[x+1][y+1].trig.theta_x * this.render.speed * this.render.i) * this.vert[x+1][y+1].trig.k_x;
-         drawY = (y+1) * this.net.cellHeight + this.vert[x+1][y+1].offset.y + Math.sin(this.vert[x+1][y+1].trig.theta_y * this.render.speed * this.render.i) * this.vert[x+1][y+1].trig.k_y;
-         centerX2+=drawX;
-         centerY2+=drawY;
-         this.ctx.lineTo(drawX, drawY);
-
-         this.ctx.closePath();
-
-         centerX2 = centerX2/3;
-         centerY2 = centerY2/3;
-         if (this.render.mouseLight && Math.pow(Math.abs(this.mouse.x - centerX2),2) + Math.pow(Math.abs(this.mouse.y-centerY2),2) < Math.pow(mouseLightRadius,2)) {
-            var radius = Math.sqrt( Math.pow(Math.abs(this.mouse.x-centerX2),2) + Math.pow(Math.abs(this.mouse.y - centerY2),2) );
-            lightnessIncrement = (mouseLightRadius-radius)/(mouseLightRadius)*this.render.mouseLightIncrement;
-            saturationIncrement = (mouseLightRadius-radius)/(mouseLightRadius)*this.render.mouseSaturationIncrement;
+         //Change direction of square split in a checkerboard pattern
+         if ((x%2===1 && y%2===0) || (x%2===0 && y%2===1)) {
+            c_x1 = (x1 + x2 + x4) /3;
+            c_y1 = (y1 + y2 + y4) /3;
+            c_x2 = (x1 + x3 + x4) /3;
+            c_y2 = (y1 + y3 + y4) /3;
+            triangles1 = [
+               [[x1,y1], [x2,y2], [c_x1, c_y1]],
+               [[x1,y1], [x4,y4], [c_x1, c_y1]],
+               [[x2,y2], [x4,y4], [c_x1, c_y1]],
+               [[x1,y1], [x3,y3], [c_x2, c_y2]],
+               [[x1,y1], [x4,y4], [c_x2, c_y2]],
+               [[x3,y3], [x4,y4], [c_x2, c_y2]],
+            ]
+         }else {
+            c_x1 = (x1 + x2 + x3) /3;
+            c_y1 = (y1 + y2 + y3) /3;
+            c_x2 = (x2 + x3 + x4) /3;
+            c_y2 = (y2 + y3 + y4) /3;
+            triangles1 = [
+               [[x1,y1], [x2,y2], [c_x1, c_y1]],
+               [[x1,y1], [x3,y3], [c_x1, c_y1]],
+               [[x2,y2], [x3,y3], [c_x1, c_y1]],
+               [[x2,y2], [x3,y3], [c_x2, c_y2]],
+               [[x2,y2], [x4,y4], [c_x2, c_y2]],
+               [[x3,y3], [x4,y4], [c_x2, c_y2]],
+            ]
          }
-         var col2 = 'hsl(' + Math.floor(this.render.color2.hue + hueDelta) + ', ' +
-                             Math.floor(this.render.color2.saturation + saturationDelta + saturationIncrement) +  '% ,' +
-                             (this.render.color2.lightness + lightnessDelta + lightnessIncrement) +'%)';
-         this.ctx.fillStyle = col2;
-         this.ctx.strokeStyle = col2;
-         this.ctx.fill();
-         this.ctx.stroke();
+         let triangles2 = [
+            [[x1,y1], [x2,y2], [x4,y4]],
+            [[x1,y1], [x3,y3], [x4,y4]],
+         ]
+         let triangles = triangles1
+         //console.log(triangles[0][0][0])
+         for (let j = 0; j < triangles.length; j++) {
+            this.ctx.beginPath();
+            this.ctx.lineTo(triangles[j][0][0],triangles[j][0][1]);
+            this.ctx.lineTo(triangles[j][1][0],triangles[j][1][1]);
+            this.ctx.lineTo(triangles[j][2][0],triangles[j][2][1]);
+            this.ctx.closePath();
+
+            let centerX = (triangles[j][0][0] + triangles[j][1][0] + triangles[j][2][0])/3;
+            let centerY = (triangles[j][0][1] + triangles[j][1][1] + triangles[j][2][1])/3;
+
+            let hue = 0, sat = 0, lig = 0, mouseSat = 0, mouseLight = 0
+            switch (j%6) {
+               case 0:
+               case 5:
+               case 3:
+                  hue = this.render.color1.hue
+                  sat = this.render.color1.saturation
+                  lig = this.render.color1.lightness
+                  mouseSat = this.render.mouseSaturationIncrement
+                  mouseLight = this.render.mouseLightIncrement
+                  break;
+               case 1:
+               case 6:
+               case 8:
+                  hue = this.render.color2.hue
+                  sat = this.render.color2.saturation
+                  lig = this.render.color2.lightness
+                  mouseSat = this.render.mouseSaturationIncrement
+                  mouseLight = this.render.mouseLightIncrement + 3
+                  break;
+               case 2:
+               case 4:
+               case 7:
+                  hue = this.render.color3.hue
+                  sat = this.render.color3.saturation
+                  lig = this.render.color3.lightness
+                  mouseSat = this.render.mouseSaturationIncrement-5
+                  mouseLight = this.render.mouseLightIncrement + 6
+                  break;
+            
+               default:
+                  break;
+            }
+            
+            if (this.render.mouseLight && Math.pow(Math.abs(this.mouse.x - centerX),2) + Math.pow(Math.abs(this.mouse.y-centerY),2) < Math.pow(mouseLightRadius,2)) {
+               var radius = Math.sqrt( Math.pow(Math.abs(this.mouse.x-centerX),2) + Math.pow(Math.abs(this.mouse.y - centerY),2) );
+               lightnessIncrement = (mouseLightRadius-radius)/(mouseLightRadius)*mouseLight;
+               saturationIncrement = (mouseLightRadius-radius)/(mouseLightRadius)*mouseSat;
+            }
+            var col = 'hsl(' + Math.floor(hue + hueDelta) + ', ' +
+                               Math.floor(sat + saturationDelta + saturationIncrement) +  '% ,' +
+                               (lig + lightnessDelta + lightnessIncrement) +'%)';
+   
+            this.ctx.fillStyle = col;
+            this.ctx.strokeStyle = col;
+            this.ctx.fill();
+            this.ctx.stroke();
+         }
       }
    }
    this.ctx.translate(-this.render.offset.x, -this.render.offset.y);
@@ -335,3 +372,11 @@ TriangleBG.prototype.renderLoop = function() {
 TriangleBG.prototype.delete = function() {
    this.delete = true;
 };
+
+TriangleBG.prototype.calculatePoint = function(net, vert, render, x, y) {
+
+   let drawX = x * net.cellWidth + vert[x][y].offset.x + Math.sin(vert[x][y].trig.theta_x * render.speed * render.i) * vert[x][y].trig.k_x;
+   let drawY = y * net.cellHeight + vert[x][y].offset.y + Math.sin(vert[x][y].trig.theta_y * render.speed * render.i) * vert[x][y].trig.k_y;
+
+   return [drawX, drawY]
+}
